@@ -56,6 +56,31 @@ def get_optimal_alignment(dp, seq1, seq2, match=2, miss=-1, d=-2):
             j -= 1
     return aligned_seq1[::-1], aligned_seq2[::-1]
 
+def multiple_alignments(dp, seq1, seq2, match=2, miss=-1, d=-2):
+    """
+    Brack through dp table to find all optimal alignments.
+    Returns a list of tuples of the aligned sequences 
+    """
+    m = len(seq1)
+    n = len(seq2)
+    alignments = []
+    def backtrack(i, j, aligned_seq1, aligned_seq2):
+        if i == 0 and j == 0:
+            alignments.append((aligned_seq1[::-1], aligned_seq2[::-1]))
+            return
+        inc = match if seq1[i - 1] == seq2[j - 1] else miss
+        # derived from a match/mismatch
+        if i > 0 and j > 0 and dp[i][j] == (dp[i - 1][j - 1] + inc):
+            backtrack(i - 1, j - 1, aligned_seq1 + seq1[i - 1], aligned_seq2 + seq2[j - 1])
+        # derived from a deletion (gap in seq2)
+        if i > 0 and dp[i][j] == (dp[i - 1][j] - d):
+            backtrack(i - 1, j, aligned_seq1 + seq1[i - 1], aligned_seq2 + "-")
+        # derived from an insertion (gap in seq1)
+        if j > 0 and dp[i][j] == (dp[i][j - 1] - d):
+            backtrack(i, j - 1, aligned_seq1 + "-", aligned_seq2 + seq2[j - 1])
+    backtrack(m, n, "", "")
+    return alignments
+
 def main():
     """
     Main function to run the Needleman-Wunsch algorithm.
@@ -81,6 +106,15 @@ def main():
     print("Optimal Alignment:")
     print(aligned_seq1)
     print(aligned_seq2)
+
+    # Get all optimal alignments
+    all_alignments = multiple_alignments(dp, seq1, seq2)
+    print("All Optimal Alignments:")
+    for alignment in all_alignments:
+        print(alignment[0])
+        print(alignment[1])
+        print()
+    print(f"Total number of optimal alignments: {len(all_alignments)}")
 
 
 if __name__ == "__main__":
